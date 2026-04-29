@@ -15,7 +15,9 @@ import {
   MGMT_TASK_COL,
   MGMT_TASKS_HEADERS,
   TAB_MGMT_TASKS,
+  TAB_MGMT_TASKS_ARCHIVE,
   TAB_TASKS,
+  TAB_TASKS_ARCHIVE,
   TASK_COL,
   TASKS_HEADERS,
 } from "./schema";
@@ -92,6 +94,37 @@ export async function dailyCleanup(): Promise<{ removed: number } | { skipped: t
     if (key && key < todayKey) staleMgmt.push(i + 1);
   });
 
+  // Archive stale rows before deleting so the monthly calendar can read history.
+  // Stale index values are 1-based (i+1 from forEach), so original row is at [idx-1].
+  const archiveTaskRows = stalesTasks.map((idx) => taskRows[idx - 1]);
+  const archiveMgmtRows = staleMgmt.map((idx) => mgmtRows[idx - 1]);
+
+  const archiveWrites: Promise<unknown>[] = [];
+  if (archiveTaskRows.length > 0) {
+    archiveWrites.push(
+      sheets.spreadsheets.values.append({
+        spreadsheetId,
+        range: `${TAB_TASKS_ARCHIVE}!A:F`,
+        valueInputOption: "RAW",
+        requestBody: { values: archiveTaskRows },
+      }),
+    );
+  }
+  if (archiveMgmtRows.length > 0) {
+    archiveWrites.push(
+      sheets.spreadsheets.values.append({
+        spreadsheetId,
+        range: `${TAB_MGMT_TASKS_ARCHIVE}!A:E`,
+        valueInputOption: "RAW",
+        requestBody: { values: archiveMgmtRows },
+      }),
+    );
+  }
+  if (archiveWrites.length > 0) {
+    await Promise.all(archiveWrites);
+  }
+
+  // Now delete from the active tabs.
   const requests: sheets_v4.Schema$Request[] = [
     ...indicesToDeleteRequests(sheetIds[TAB_TASKS], stalesTasks),
     ...indicesToDeleteRequests(sheetIds[TAB_MGMT_TASKS], staleMgmt),

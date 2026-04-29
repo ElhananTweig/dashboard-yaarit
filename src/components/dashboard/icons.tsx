@@ -101,6 +101,34 @@ export const CheckIcon = (p: SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+export const CalendarIcon = (p: SVGProps<SVGSVGElement>) => (
+  <svg width={13} height={13} viewBox="0 0 24 24" {...stroke(p)}>
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+);
+
+export const ChevronRightIcon = (p: SVGProps<SVGSVGElement>) => (
+  <svg width={14} height={14} viewBox="0 0 24 24" {...stroke({ ...p, strokeWidth: 2.5 })}>
+    <polyline points="9 18 15 12 9 6" />
+  </svg>
+);
+
+export const ChevronLeftIcon = (p: SVGProps<SVGSVGElement>) => (
+  <svg width={14} height={14} viewBox="0 0 24 24" {...stroke({ ...p, strokeWidth: 2.5 })}>
+    <polyline points="15 18 9 12 15 6" />
+  </svg>
+);
+
+export const ArrowRightIcon = (p: SVGProps<SVGSVGElement>) => (
+  <svg width={13} height={13} viewBox="0 0 24 24" {...stroke(p)}>
+    <line x1="5" y1="12" x2="19" y2="12" />
+    <polyline points="12 5 19 12 12 19" />
+  </svg>
+);
+
 export const StarIcon = (p: SVGProps<SVGSVGElement>) => (
   <svg
     width={18}

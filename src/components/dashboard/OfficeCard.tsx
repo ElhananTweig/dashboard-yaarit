@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { hexToSoft } from "@/lib/colors";
 import type { Office, Task } from "@/lib/types";
-import { FilterSmallIcon, MoreIcon, PlusSmallIcon } from "./icons";
+import { CalendarIcon, FilterSmallIcon, MoreIcon, PlusSmallIcon } from "./icons";
 import TaskChip from "./TaskChip";
 
 interface OfficeCardProps {
@@ -69,6 +70,9 @@ export default function OfficeCard({
           </div>
         </div>
         <div className="head-actions">
+          <Link href={`/calendar/${office.id}`} className="ico" title="יומן חודשי">
+            <CalendarIcon />
+          </Link>
           <button className="ico" title="פילטר" type="button">
             <FilterSmallIcon />
           </button>

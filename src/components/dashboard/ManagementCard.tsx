@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { ManagementRow, Task } from "@/lib/types";
-import { MoreIcon, PlusSmallIcon, StarIcon, TrashIcon } from "./icons";
+import { CalendarIcon, MoreIcon, PlusSmallIcon, StarIcon, TrashIcon } from "./icons";
 import TaskChip from "./TaskChip";
 
 interface ManagementCardProps {
@@ -89,6 +90,9 @@ export default function ManagementCard({
           </div>
         </div>
         <div className="head-actions">
+          <Link href="/calendar/mgmt" className="ico" title="יומן חודשי">
+            <CalendarIcon />
+          </Link>
           <button className="ico" title="עוד" type="button">
             <MoreIcon />
           </button>

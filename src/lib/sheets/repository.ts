@@ -31,7 +31,9 @@ import {
   MGMT_TASKS_HEADERS,
   TAB_MGMT_ROWS,
   TAB_MGMT_TASKS,
+  TAB_MGMT_TASKS_ARCHIVE,
   TAB_TASKS,
+  TAB_TASKS_ARCHIVE,
   TASK_COL,
   TASKS_HEADERS,
   taskRowToValues,
@@ -321,4 +323,160 @@ async function deleteRows(sheetId: number, indices: number[]): Promise<void> {
     spreadsheetId: getSpreadsheetId(),
     requestBody: { requests },
   });
+}
+
+/* ----------------------------------------------------------------------- */
+/*                            CALENDAR DATA                                */
+/* ----------------------------------------------------------------------- */
+
+export interface CalendarData {
+  /** The office record, or null for the management card. */
+  office: {
+    id: string;
+    name: string;
+    logo: string;
+    logoBg: string;
+    brand: string;
+    meta: string;
+  } | null;
+  yearMonth: string;
+  /** Department (or management row) names. */
+  departments: string[];
+  /** Historical + today's יומי tasks, indexed by "YYYY-MM-DD". */
+  yomiByDate: Record<string, Task[]>;
+  /** קבוע tasks — displayed on every day when filter includes קבוע. */
+  kavuaTasks: Task[];
+}
+
+const TZ_DEFAULT_CAL = "Asia/Jerusalem";
+
+function calDateKey(iso: string, tz: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
+}
+
+/**
+ * Loads calendar data for a given office (or management) and month.
+ * @param officeId  Office id ("kikar", "srugim", …) or "mgmt" for management.
+ * @param yearMonth "YYYY-MM" (e.g. "2026-04").
+ */
+export async function loadCalendarData(
+  officeId: string,
+  yearMonth: string,
+): Promise<CalendarData> {
+  await getSheetIds();
+  const tz = process.env.DASHBOARD_TZ || TZ_DEFAULT_CAL;
+  const isMgmt = officeId === "mgmt";
+
+  if (!isMgmt) {
+    const [taskRows, archiveRows] = await Promise.all([
+      readDataRows(TAB_TASKS, TASKS_HEADERS.length),
+      readDataRows(TAB_TASKS_ARCHIVE, TASKS_HEADERS.length),
+    ]);
+
+    const office = OFFICES.find((o) => o.id === officeId) ?? null;
+    const kavuaTasks: Task[] = [];
+    const yomiByDate: Record<string, Task[]> = {};
+
+    for (const row of taskRows) {
+      const id = row[TASK_COL.id];
+      if (!id) continue;
+      if ((row[TASK_COL.officeId] ?? "") !== officeId) continue;
+      const type = (row[TASK_COL.type] as TaskType) || "יומי";
+      const text = row[TASK_COL.text] ?? "";
+      const dept = row[TASK_COL.dept] ?? "";
+      const createdAt = row[TASK_COL.createdAt] ?? "";
+      const task: Task = { id, officeId, dept, type, text, createdAt };
+      if (type === "קבוע") {
+        kavuaTasks.push(task);
+      } else {
+        const dk = calDateKey(createdAt, tz);
+        if (dk.startsWith(yearMonth)) (yomiByDate[dk] ??= []).push(task);
+      }
+    }
+
+    for (const row of archiveRows) {
+      const id = row[TASK_COL.id];
+      if (!id) continue;
+      if ((row[TASK_COL.officeId] ?? "") !== officeId) continue;
+      const type = (row[TASK_COL.type] as TaskType) || "יומי";
+      const text = row[TASK_COL.text] ?? "";
+      const dept = row[TASK_COL.dept] ?? "";
+      const createdAt = row[TASK_COL.createdAt] ?? "";
+      const dk = calDateKey(createdAt, tz);
+      if (!dk.startsWith(yearMonth)) continue;
+      const task: Task = { id, officeId, dept, type, text, createdAt };
+      (yomiByDate[dk] ??= []).push(task);
+    }
+
+    return {
+      office,
+      yearMonth,
+      departments: [...DEPARTMENTS],
+      yomiByDate,
+      kavuaTasks,
+    };
+  }
+
+  // Management card
+  const [mgmtRowRows, mgmtTaskRows, archiveRows] = await Promise.all([
+    readDataRows(TAB_MGMT_ROWS, MGMT_ROWS_HEADERS.length),
+    readDataRows(TAB_MGMT_TASKS, MGMT_TASKS_HEADERS.length),
+    readDataRows(TAB_MGMT_TASKS_ARCHIVE, MGMT_TASKS_HEADERS.length),
+  ]);
+
+  const rowNameById = new Map<string, string>();
+  for (const r of mgmtRowRows) {
+    const id = r[MGMT_ROW_COL.id];
+    const name = r[MGMT_ROW_COL.name] ?? "שורה";
+    if (id) rowNameById.set(id, name);
+  }
+
+  const kavuaTasks: Task[] = [];
+  const yomiByDate: Record<string, Task[]> = {};
+
+  for (const row of mgmtTaskRows) {
+    const id = row[MGMT_TASK_COL.id];
+    const rowId = row[MGMT_TASK_COL.rowId];
+    if (!id || !rowId) continue;
+    const type = (row[MGMT_TASK_COL.type] as TaskType) || "יומי";
+    const text = row[MGMT_TASK_COL.text] ?? "";
+    const createdAt = row[MGMT_TASK_COL.createdAt] ?? "";
+    const dept = rowNameById.get(rowId) ?? rowId;
+    const task: Task = { id, officeId: MGMT_ID, dept, type, text, createdAt };
+    if (type === "קבוע") {
+      kavuaTasks.push(task);
+    } else {
+      const dk = calDateKey(createdAt, tz);
+      if (dk.startsWith(yearMonth)) (yomiByDate[dk] ??= []).push(task);
+    }
+  }
+
+  for (const row of archiveRows) {
+    const id = row[MGMT_TASK_COL.id];
+    const rowId = row[MGMT_TASK_COL.rowId];
+    if (!id || !rowId) continue;
+    const type = (row[MGMT_TASK_COL.type] as TaskType) || "יומי";
+    const text = row[MGMT_TASK_COL.text] ?? "";
+    const createdAt = row[MGMT_TASK_COL.createdAt] ?? "";
+    const dept = rowNameById.get(rowId) ?? rowId;
+    const dk = calDateKey(createdAt, tz);
+    if (!dk.startsWith(yearMonth)) continue;
+    const task: Task = { id, officeId: MGMT_ID, dept, type, text, createdAt };
+    (yomiByDate[dk] ??= []).push(task);
+  }
+
+  return {
+    office: null,
+    yearMonth,
+    departments: mgmtRowRows.map((r) => r[MGMT_ROW_COL.name] ?? "").filter(Boolean),
+    yomiByDate,
+    kavuaTasks,
+  };
 }

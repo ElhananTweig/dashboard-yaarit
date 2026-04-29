@@ -1,19 +1,30 @@
 /**
  * Sheet schema — single source of truth for tab names + columns.
  *
- *   tasks       id | officeId | dept   | type | text | createdAt
- *   mgmt_rows   id | name     | sortIndex
- *   mgmt_tasks  id | rowId    | type   | text | createdAt
+ *   tasks               id | officeId | dept   | type | text | createdAt
+ *   mgmt_rows           id | name     | sortIndex
+ *   mgmt_tasks          id | rowId    | type   | text | createdAt
+ *   tasks_archive       id | officeId | dept   | type | text | createdAt  (same as tasks)
+ *   mgmt_tasks_archive  id | rowId    | type   | text | createdAt          (same as mgmt_tasks)
  *
  * Office tasks live in `tasks`; management tasks live in `mgmt_tasks`
  * (keyed by rowId, so renaming a row doesn't orphan its tasks).
+ * Archive tabs hold historical יומי tasks after daily cleanup, enabling
+ * the monthly calendar view.
  */
 
 export const TAB_TASKS = "tasks" as const;
 export const TAB_MGMT_ROWS = "mgmt_rows" as const;
 export const TAB_MGMT_TASKS = "mgmt_tasks" as const;
+export const TAB_TASKS_ARCHIVE = "tasks_archive" as const;
+export const TAB_MGMT_TASKS_ARCHIVE = "mgmt_tasks_archive" as const;
 
-export type TabName = typeof TAB_TASKS | typeof TAB_MGMT_ROWS | typeof TAB_MGMT_TASKS;
+export type TabName =
+  | typeof TAB_TASKS
+  | typeof TAB_MGMT_ROWS
+  | typeof TAB_MGMT_TASKS
+  | typeof TAB_TASKS_ARCHIVE
+  | typeof TAB_MGMT_TASKS_ARCHIVE;
 
 export const TASKS_HEADERS = ["id", "officeId", "dept", "type", "text", "createdAt"] as const;
 export const MGMT_ROWS_HEADERS = ["id", "name", "sortIndex"] as const;
@@ -23,6 +34,8 @@ export const ALL_TABS = [
   { name: TAB_TASKS, headers: TASKS_HEADERS },
   { name: TAB_MGMT_ROWS, headers: MGMT_ROWS_HEADERS },
   { name: TAB_MGMT_TASKS, headers: MGMT_TASKS_HEADERS },
+  { name: TAB_TASKS_ARCHIVE, headers: TASKS_HEADERS },
+  { name: TAB_MGMT_TASKS_ARCHIVE, headers: MGMT_TASKS_HEADERS },
 ] as const;
 
 /** Column index (0-based) lookups, so we don't sprinkle magic numbers around. */

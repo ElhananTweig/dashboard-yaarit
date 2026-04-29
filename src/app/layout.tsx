@@ -9,10 +9,10 @@ export const metadata: Metadata = {
 const themeBootstrap = `
   (function() {
     try {
-      var t = localStorage.getItem('theme') || 'dark';
+      var t = localStorage.getItem('theme') || 'light';
       document.documentElement.setAttribute('data-theme', t);
     } catch (e) {
-      document.documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.setAttribute('data-theme', 'light');
     }
   })();
 `;
@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="he" dir="rtl" data-theme="dark">
+    <html lang="he" dir="rtl" data-theme="light">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
