@@ -7,14 +7,17 @@ interface TaskChipProps {
   task: Task;
   isNew?: boolean;
   filter: "all" | "yomi" | "kavua";
+  assigneeFilter: "all" | "יערית" | "רחמים";
   onRemove: (task: Task) => void;
 }
 
-export default function TaskChip({ task, isNew, filter, onRemove }: TaskChipProps) {
+export default function TaskChip({ task, isNew, filter, assigneeFilter, onRemove }: TaskChipProps) {
   const [removing, setRemoving] = useState(false);
   const type = task.type === "יומי" ? "yomi" : "kavua";
 
-  const visible = filter === "all" || filter === type;
+  const matchesType = filter === "all" || filter === type;
+  const matchesAssignee = assigneeFilter === "all" || task.assignee === assigneeFilter;
+  const visible = matchesType && matchesAssignee;
   if (!visible) return null;
 
   const handleRemove = () => {
@@ -26,10 +29,12 @@ export default function TaskChip({ task, isNew, filter, onRemove }: TaskChipProp
     <span
       className={`task${isNew ? " new" : ""}${removing ? " removing" : ""}`}
       data-type={type}
+      data-assignee={task.assignee}
       data-text={task.text}
     >
       <span className="tip" />
       <span className="text">{task.text}</span>
+      <span className="assignee">{task.assignee}</span>
       <button className="x" type="button" onClick={handleRemove} title="הסר" aria-label="הסר">
         ×
       </button>

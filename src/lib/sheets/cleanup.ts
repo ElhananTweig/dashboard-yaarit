@@ -104,7 +104,7 @@ export async function dailyCleanup(): Promise<{ removed: number } | { skipped: t
     archiveWrites.push(
       sheets.spreadsheets.values.append({
         spreadsheetId,
-        range: `${TAB_TASKS_ARCHIVE}!A:F`,
+        range: `${TAB_TASKS_ARCHIVE}!A:G`,
         valueInputOption: "RAW",
         requestBody: { values: archiveTaskRows },
       }),
@@ -114,7 +114,7 @@ export async function dailyCleanup(): Promise<{ removed: number } | { skipped: t
     archiveWrites.push(
       sheets.spreadsheets.values.append({
         spreadsheetId,
-        range: `${TAB_MGMT_TASKS_ARCHIVE}!A:E`,
+        range: `${TAB_MGMT_TASKS_ARCHIVE}!A:F`,
         valueInputOption: "RAW",
         requestBody: { values: archiveMgmtRows },
       }),

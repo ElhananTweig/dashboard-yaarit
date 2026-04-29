@@ -3,14 +3,23 @@
 import { FilterIcon, SortIcon } from "./icons";
 
 export type FilterValue = "all" | "yomi" | "kavua";
+export type AssigneeFilterValue = "all" | "יערית" | "רחמים";
 
 interface ToolbarProps {
   filter: FilterValue;
   onFilterChange: (next: FilterValue) => void;
+  assigneeFilter: AssigneeFilterValue;
+  onAssigneeFilterChange: (next: AssigneeFilterValue) => void;
   updatedAgo: string;
 }
 
-export default function Toolbar({ filter, onFilterChange, updatedAgo }: ToolbarProps) {
+export default function Toolbar({
+  filter,
+  onFilterChange,
+  assigneeFilter,
+  onAssigneeFilterChange,
+  updatedAgo,
+}: ToolbarProps) {
   const seg = (val: FilterValue, label: string) => (
     <button
       className={filter === val ? "on" : ""}
@@ -28,10 +37,19 @@ export default function Toolbar({ filter, onFilterChange, updatedAgo }: ToolbarP
         {seg("yomi", "יומי")}
         {seg("kavua", "קבוע")}
       </div>
-      <button className="filter-chip" type="button">
+      <label className="filter-chip filter-chip-select">
         <FilterIcon />
-        מחלקה: הכל
-      </button>
+        <span>שיוך:</span>
+        <select
+          value={assigneeFilter}
+          onChange={(e) => onAssigneeFilterChange(e.target.value as AssigneeFilterValue)}
+          aria-label="סינון לפי שיוך"
+        >
+          <option value="all">הכל</option>
+          <option value="יערית">יערית</option>
+          <option value="רחמים">רחמים</option>
+        </select>
+      </label>
       <button className="filter-chip" type="button">
         <SortIcon />
         מיון: עדכון אחרון

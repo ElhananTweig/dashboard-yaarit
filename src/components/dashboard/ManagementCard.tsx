@@ -12,6 +12,7 @@ interface ManagementCardProps {
   /** ID of a row that was just added — its row should animate in and focus the input. */
   newRowId: string | null;
   filter: "all" | "yomi" | "kavua";
+  assigneeFilter: "all" | "יערית" | "רחמים";
   onQuickAdd: (rowName: string) => void;
   onAddRow: () => void;
   onRemoveRow: (rowId: string) => void;
@@ -25,6 +26,7 @@ export default function ManagementCard({
   newTaskIds,
   newRowId,
   filter,
+  assigneeFilter,
   onQuickAdd,
   onAddRow,
   onRemoveRow,
@@ -128,6 +130,7 @@ export default function ManagementCard({
                       task={task}
                       isNew={newTaskIds.has(task.id)}
                       filter={filter}
+                      assigneeFilter={assigneeFilter}
                       onRemove={onRemoveTask}
                     />
                   ))

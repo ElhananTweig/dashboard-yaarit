@@ -13,6 +13,7 @@ interface OfficeCardProps {
   /** Set of task IDs that should animate in. */
   newTaskIds: Set<string>;
   filter: "all" | "yomi" | "kavua";
+  assigneeFilter: "all" | "יערית" | "רחמים";
   onQuickAdd: (officeId: string, dept: string) => void;
   onRemoveTask: (task: Task) => void;
   /** Optional staggered animation delay in ms. */
@@ -25,6 +26,7 @@ export default function OfficeCard({
   tasksByDept,
   newTaskIds,
   filter,
+  assigneeFilter,
   onQuickAdd,
   onRemoveTask,
   animationDelayMs,
@@ -101,6 +103,7 @@ export default function OfficeCard({
                       task={task}
                       isNew={newTaskIds.has(task.id)}
                       filter={filter}
+                      assigneeFilter={assigneeFilter}
                       onRemove={onRemoveTask}
                     />
                   ))

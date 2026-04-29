@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { DashboardSnapshot, NewTaskInput, TaskType } from "@/lib/types";
+import { TASK_ASSIGNEES } from "@/lib/types";
+import type { DashboardSnapshot, NewTaskInput, TaskAssignee, TaskType } from "@/lib/types";
 
 interface AddTaskModalProps {
   open: boolean;
@@ -25,6 +26,7 @@ export default function AddTaskModal({
   const [office, setOffice] = useState<string>(prefillOffice ?? snapshot.offices[0].id);
   const [dept, setDept] = useState<string>(prefillDept ?? snapshot.departments[0]);
   const [type, setType] = useState<TaskType>("יומי");
+  const [assignee, setAssignee] = useState<TaskAssignee>("יערית");
   const [text, setText] = useState("");
   const textRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -44,6 +46,7 @@ export default function AddTaskModal({
     setOffice(o);
     setDept(d);
     setType("יומי");
+    setAssignee("יערית");
     setText("");
     const t = window.setTimeout(() => textRef.current?.focus(), 220);
     return () => window.clearTimeout(t);
@@ -68,7 +71,7 @@ export default function AddTaskModal({
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, office, dept, type, text]);
+  }, [open, office, dept, type, assignee, text]);
 
   const submit = () => {
     const trimmed = text.trim();
@@ -76,7 +79,7 @@ export default function AddTaskModal({
       textRef.current?.focus();
       return;
     }
-    onSave({ officeId: office, dept, type, text: trimmed });
+    onSave({ officeId: office, dept, type, assignee, text: trimmed });
   };
 
   return (
@@ -89,7 +92,7 @@ export default function AddTaskModal({
         aria-labelledby="modalTitle"
       >
         <h3 id="modalTitle">משימה חדשה</h3>
-        <p className="sub">בחר משרד, מחלקה וסוג משימה.</p>
+        <p className="sub">בחר משרד, מחלקה, סוג משימה ושיוך.</p>
 
         <div className="field">
           <label className="label">משרד</label>
@@ -144,6 +147,21 @@ export default function AddTaskModal({
               קבוע
             </button>
           </div>
+        </div>
+
+        <div className="field">
+          <label className="label">שיוך</label>
+          <select
+            className="select"
+            value={assignee}
+            onChange={(e) => setAssignee(e.target.value as TaskAssignee)}
+          >
+            {TASK_ASSIGNEES.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="field">

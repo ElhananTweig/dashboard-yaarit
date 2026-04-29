@@ -127,7 +127,11 @@ export async function getSheetIds(): Promise<SheetIds> {
         (r.data.valueRanges ?? []).forEach((vr, i) => {
           const tab = ALL_TABS[i];
           const firstRow = vr.values?.[0] ?? [];
-          if (firstRow.length === 0 || firstRow.every((v) => !v)) {
+          const needsHeaderPatch =
+            firstRow.length === 0 ||
+            firstRow.every((v) => !v) ||
+            tab.headers.some((header, idx) => (firstRow[idx] ?? "") !== header);
+          if (needsHeaderPatch) {
             patches.push({ range: `${tab.name}!A1`, values: [[...tab.headers]] });
           }
         });

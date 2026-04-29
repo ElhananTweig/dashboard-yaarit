@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Task } from "@/lib/types";
-import type { FilterValue } from "@/components/dashboard/Toolbar";
+import type { AssigneeFilterValue, FilterValue } from "@/components/dashboard/Toolbar";
 import { hexToSoft } from "@/lib/colors";
 import { ArrowRightIcon, ChevronLeftIcon, ChevronRightIcon, StarIcon } from "@/components/dashboard/icons";
 import TopNav from "@/components/dashboard/TopNav";
@@ -76,15 +76,26 @@ interface DayCellProps {
   day: number;
   yearMonth: string;
   filter: FilterValue;
+  assigneeFilter: AssigneeFilterValue;
   yomiByDate: Record<string, Task[]>;
   kavuaTasks: Task[];
   isToday: boolean;
 }
 
-function DayCell({ day, yearMonth, filter, yomiByDate, kavuaTasks, isToday }: DayCellProps) {
+function DayCell({
+  day,
+  yearMonth,
+  filter,
+  assigneeFilter,
+  yomiByDate,
+  kavuaTasks,
+  isToday,
+}: DayCellProps) {
   const dk = dateKey(yearMonth, day);
-  const yomiTasks = filter !== "kavua" ? (yomiByDate[dk] ?? []) : [];
-  const fixedTasks = filter !== "yomi" ? kavuaTasks : [];
+  const filterByAssignee = (tasks: Task[]) =>
+    assigneeFilter === "all" ? tasks : tasks.filter((t) => t.assignee === assigneeFilter);
+  const yomiTasks = filter !== "kavua" ? filterByAssignee(yomiByDate[dk] ?? []) : [];
+  const fixedTasks = filter !== "yomi" ? filterByAssignee(kavuaTasks) : [];
   const allTasks = [...yomiTasks, ...fixedTasks];
 
   return (
@@ -93,15 +104,17 @@ function DayCell({ day, yearMonth, filter, yomiByDate, kavuaTasks, isToday }: Da
       {allTasks.length > 0 && (
         <div className="cal-tasks">
           {yomiTasks.map((t) => (
-            <div key={t.id} className="cal-chip yomi" title={`${t.dept} · ${t.text}`}>
+            <div key={t.id} className="cal-chip yomi" title={`${t.dept} · ${t.assignee} · ${t.text}`}>
               <span className="cal-chip-dot" />
               <span className="cal-chip-text">{t.text}</span>
+              <span className="cal-chip-assignee">{t.assignee}</span>
             </div>
           ))}
           {fixedTasks.map((t) => (
-            <div key={t.id} className="cal-chip kavua" title={`${t.dept} · ${t.text}`}>
+            <div key={t.id} className="cal-chip kavua" title={`${t.dept} · ${t.assignee} · ${t.text}`}>
               <span className="cal-chip-dot" />
               <span className="cal-chip-text">{t.text}</span>
+              <span className="cal-chip-assignee">{t.assignee}</span>
             </div>
           ))}
         </div>
@@ -120,6 +133,7 @@ export default function DepartmentCalendar({
 }: DepartmentCalendarProps) {
   const router = useRouter();
   const [filter, setFilter] = useState<FilterValue>("all");
+  const [assigneeFilter, setAssigneeFilter] = useState<AssigneeFilterValue>("all");
 
   const [, monthNum] = yearMonth.split("-");
   const monthLabel = HEBREW_MONTHS[monthNum] ?? monthNum;
@@ -229,6 +243,18 @@ export default function DepartmentCalendar({
             {seg("yomi", "יומי")}
             {seg("kavua", "קבוע")}
           </div>
+          <label className="filter-chip filter-chip-select">
+            שיוך:
+            <select
+              value={assigneeFilter}
+              onChange={(e) => setAssigneeFilter(e.target.value as AssigneeFilterValue)}
+              aria-label="סינון לפי שיוך"
+            >
+              <option value="all">הכל</option>
+              <option value="יערית">יערית</option>
+              <option value="רחמים">רחמים</option>
+            </select>
+          </label>
           <div className="spacer" />
           <span style={{ fontSize: "11.5px", color: "var(--fg-3)" }}>
             <b>{totalDays}</b> ימים בחודש
@@ -261,6 +287,7 @@ export default function DepartmentCalendar({
                   day={day}
                   yearMonth={yearMonth}
                   filter={filter}
+                  assigneeFilter={assigneeFilter}
                   yomiByDate={yomiByDate}
                   kavuaTasks={kavuaTasks}
                   isToday={dk === today}

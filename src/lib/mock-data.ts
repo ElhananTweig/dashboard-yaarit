@@ -1,4 +1,4 @@
-import type { DashboardSnapshot, Office, Task, TaskType } from "./types";
+import type { DashboardSnapshot, Office, Task, TaskAssignee, TaskType } from "./types";
 
 export const OFFICES: Office[] = [
   { id: "kikar",   name: "כיכר השבת", logo: "/assets/kikar.png",   logoBg: "#0a0a0a", brand: "#dc2626", meta: "חדשות חרדיות" },
@@ -13,11 +13,18 @@ export const DEPARTMENTS = ["תוכן", "שיווק", "אולפן", "מדיה", 
 let taskSeq = 0;
 /** Mock tasks are seeded as if created "now" — so the daily cleanup never sweeps them on first load. */
 const seedCreatedAt = () => new Date().toISOString();
-const t = (officeId: string, dept: string, type: TaskType, text: string): Task => ({
+const t = (
+  officeId: string,
+  dept: string,
+  type: TaskType,
+  text: string,
+  assignee: TaskAssignee = "יערית",
+): Task => ({
   id: `t_${++taskSeq}`,
   officeId,
   dept,
   type,
+  assignee,
   text,
   createdAt: seedCreatedAt(),
 });

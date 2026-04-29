@@ -426,6 +426,29 @@ body::before {
   border-style: solid;
   background: var(--bg-2);
 }
+.filter-chip-select {
+  gap: 6px;
+  cursor: default;
+}
+.filter-chip-select select {
+  height: 22px;
+  min-width: 78px;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  background: var(--bg-2);
+  color: var(--fg-1);
+  font: inherit;
+  font-size: 12px;
+  padding: 0 6px;
+}
+[data-theme="light"] .filter-chip-select select {
+  background: var(--bg-1);
+}
+.filter-chip-select select:focus {
+  outline: none;
+  border-color: var(--line-3);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.12);
+}
 
 /* ===== GRID ===== */
 .grid {
@@ -674,6 +697,16 @@ body::before {
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 220px;
+}
+.task .assignee {
+  font-size: 10.5px;
+  line-height: 1;
+  color: var(--fg-3);
+  background: var(--bg-3);
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  padding: 2px 6px;
+  white-space: nowrap;
 }
 .task .x {
   width: 14px;
@@ -1321,10 +1354,23 @@ textarea.input {
   background: var(--kavua);
 }
 .cal-chip-text {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+}
+.cal-chip-assignee {
+  font-size: 10px;
+  line-height: 1;
+  color: var(--fg-3);
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  padding: 2px 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* Responsive: reduce cell min-height on smaller screens */

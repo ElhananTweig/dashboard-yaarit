@@ -7,10 +7,13 @@
  */
 
 export type TaskType = "יומי" | "קבוע";
+export type TaskAssignee = "יערית" | "רחמים";
+export const TASK_ASSIGNEES: TaskAssignee[] = ["יערית", "רחמים"];
 
 export interface Task {
   id: string;
   type: TaskType;
+  assignee: TaskAssignee;
   text: string;
   /** Office ID or "mgmt" for the management card. */
   officeId: string;
@@ -60,5 +63,6 @@ export interface NewTaskInput {
   officeId: string;
   dept: string;
   type: TaskType;
+  assignee: TaskAssignee;
   text: string;
 }

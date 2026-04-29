@@ -20,6 +20,7 @@ import type {
   ManagementRow,
   NewTaskInput,
   Task,
+  TaskAssignee,
   TaskType,
 } from "../types";
 
@@ -43,6 +44,11 @@ import {
 import { dailyCleanup } from "./cleanup";
 
 const MGMT_ID = "mgmt";
+const DEFAULT_ASSIGNEE: TaskAssignee = "יערית";
+
+function parseAssignee(value: string | undefined): TaskAssignee {
+  return value === "רחמים" ? "רחמים" : DEFAULT_ASSIGNEE;
+}
 
 /* ----------------------------------------------------------------------- */
 /*                              READ HELPERS                                */
@@ -105,9 +111,10 @@ export async function loadSnapshot(): Promise<DashboardSnapshot> {
     const officeId = row[TASK_COL.officeId] ?? "";
     const dept = row[TASK_COL.dept] ?? "";
     const type = (row[TASK_COL.type] as TaskType) || "יומי";
+    const assignee = parseAssignee(row[TASK_COL.assignee]);
     const text = row[TASK_COL.text] ?? "";
     const createdAt = row[TASK_COL.createdAt] ?? new Date().toISOString();
-    const task: Task = { id, officeId, dept, type, text, createdAt };
+    const task: Task = { id, officeId, dept, type, assignee, text, createdAt };
     const bucket = (officeTasks[officeId] ??= {});
     (bucket[dept] ??= []).push(task);
   }
@@ -131,6 +138,7 @@ export async function loadSnapshot(): Promise<DashboardSnapshot> {
     const target = rowsById.get(rowId);
     if (!target) continue;
     const type = (row[MGMT_TASK_COL.type] as TaskType) || "יומי";
+    const assignee = parseAssignee(row[MGMT_TASK_COL.assignee]);
     const text = row[MGMT_TASK_COL.text] ?? "";
     const createdAt = row[MGMT_TASK_COL.createdAt] ?? new Date().toISOString();
     target.tasks.push({
@@ -138,6 +146,7 @@ export async function loadSnapshot(): Promise<DashboardSnapshot> {
       officeId: MGMT_ID,
       dept: target.name, // dept always reflects the row's CURRENT name
       type,
+      assignee,
       text,
       createdAt,
     });
@@ -173,20 +182,35 @@ export async function createTask(
     if (!rowId) throw new Error(`Management row not found: ${input.dept}`);
     await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: `${TAB_MGMT_TASKS}!A:E`,
+      range: `${TAB_MGMT_TASKS}!A:F`,
       valueInputOption: "RAW",
       requestBody: {
         values: [
-          mgmtTaskRowToValues({ id, rowId, type: input.type, text: input.text, createdAt }),
+          mgmtTaskRowToValues({
+            id,
+            rowId,
+            type: input.type,
+            assignee: input.assignee,
+            text: input.text,
+            createdAt,
+          }),
         ],
       },
     });
-    return { id, officeId: MGMT_ID, dept: input.dept, type: input.type, text: input.text, createdAt };
+    return {
+      id,
+      officeId: MGMT_ID,
+      dept: input.dept,
+      type: input.type,
+      assignee: input.assignee,
+      text: input.text,
+      createdAt,
+    };
   }
 
   await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: `${TAB_TASKS}!A:F`,
+    range: `${TAB_TASKS}!A:G`,
     valueInputOption: "RAW",
     requestBody: {
       values: [
@@ -195,13 +219,22 @@ export async function createTask(
           officeId: input.officeId,
           dept: input.dept,
           type: input.type,
+          assignee: input.assignee,
           text: input.text,
           createdAt,
         }),
       ],
     },
   });
-  return { id, officeId: input.officeId, dept: input.dept, type: input.type, text: input.text, createdAt };
+  return {
+    id,
+    officeId: input.officeId,
+    dept: input.dept,
+    type: input.type,
+    assignee: input.assignee,
+    text: input.text,
+    createdAt,
+  };
 }
 
 export async function deleteTask(taskId: string, officeId: string): Promise<void> {
@@ -389,10 +422,11 @@ export async function loadCalendarData(
       if (!id) continue;
       if ((row[TASK_COL.officeId] ?? "") !== officeId) continue;
       const type = (row[TASK_COL.type] as TaskType) || "יומי";
+      const assignee = parseAssignee(row[TASK_COL.assignee]);
       const text = row[TASK_COL.text] ?? "";
       const dept = row[TASK_COL.dept] ?? "";
       const createdAt = row[TASK_COL.createdAt] ?? "";
-      const task: Task = { id, officeId, dept, type, text, createdAt };
+      const task: Task = { id, officeId, dept, type, assignee, text, createdAt };
       if (type === "קבוע") {
         kavuaTasks.push(task);
       } else {
@@ -406,12 +440,13 @@ export async function loadCalendarData(
       if (!id) continue;
       if ((row[TASK_COL.officeId] ?? "") !== officeId) continue;
       const type = (row[TASK_COL.type] as TaskType) || "יומי";
+      const assignee = parseAssignee(row[TASK_COL.assignee]);
       const text = row[TASK_COL.text] ?? "";
       const dept = row[TASK_COL.dept] ?? "";
       const createdAt = row[TASK_COL.createdAt] ?? "";
       const dk = calDateKey(createdAt, tz);
       if (!dk.startsWith(yearMonth)) continue;
-      const task: Task = { id, officeId, dept, type, text, createdAt };
+      const task: Task = { id, officeId, dept, type, assignee, text, createdAt };
       (yomiByDate[dk] ??= []).push(task);
     }
 
@@ -446,10 +481,11 @@ export async function loadCalendarData(
     const rowId = row[MGMT_TASK_COL.rowId];
     if (!id || !rowId) continue;
     const type = (row[MGMT_TASK_COL.type] as TaskType) || "יומי";
+    const assignee = parseAssignee(row[MGMT_TASK_COL.assignee]);
     const text = row[MGMT_TASK_COL.text] ?? "";
     const createdAt = row[MGMT_TASK_COL.createdAt] ?? "";
     const dept = rowNameById.get(rowId) ?? rowId;
-    const task: Task = { id, officeId: MGMT_ID, dept, type, text, createdAt };
+    const task: Task = { id, officeId: MGMT_ID, dept, type, assignee, text, createdAt };
     if (type === "קבוע") {
       kavuaTasks.push(task);
     } else {
@@ -463,12 +499,13 @@ export async function loadCalendarData(
     const rowId = row[MGMT_TASK_COL.rowId];
     if (!id || !rowId) continue;
     const type = (row[MGMT_TASK_COL.type] as TaskType) || "יומי";
+    const assignee = parseAssignee(row[MGMT_TASK_COL.assignee]);
     const text = row[MGMT_TASK_COL.text] ?? "";
     const createdAt = row[MGMT_TASK_COL.createdAt] ?? "";
     const dept = rowNameById.get(rowId) ?? rowId;
     const dk = calDateKey(createdAt, tz);
     if (!dk.startsWith(yearMonth)) continue;
-    const task: Task = { id, officeId: MGMT_ID, dept, type, text, createdAt };
+    const task: Task = { id, officeId: MGMT_ID, dept, type, assignee, text, createdAt };
     (yomiByDate[dk] ??= []).push(task);
   }
 

@@ -23,7 +23,7 @@ import OfficeCard from "./OfficeCard";
 import PageHeader from "./PageHeader";
 import StatsStrip from "./StatsStrip";
 import Toast from "./Toast";
-import Toolbar, { FilterValue } from "./Toolbar";
+import Toolbar, { AssigneeFilterValue, FilterValue } from "./Toolbar";
 import TopNav from "./TopNav";
 
 interface DashboardProps {
@@ -38,6 +38,7 @@ const RENAME_DEBOUNCE_MS = 600;
 export default function Dashboard({ initial }: DashboardProps) {
   const [snapshot, setSnapshot] = useState<DashboardSnapshot>(initial);
   const [filter, setFilter] = useState<FilterValue>("all");
+  const [assigneeFilter, setAssigneeFilter] = useState<AssigneeFilterValue>("all");
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -127,6 +128,7 @@ export default function Dashboard({ initial }: DashboardProps) {
       officeId: input.officeId,
       dept: input.dept,
       type: input.type,
+      assignee: input.assignee,
       text: input.text,
       createdAt: new Date().toISOString(),
     };
@@ -231,7 +233,13 @@ export default function Dashboard({ initial }: DashboardProps) {
           weeklyRate={94}
         />
 
-        <Toolbar filter={filter} onFilterChange={setFilter} updatedAgo="דקה" />
+        <Toolbar
+          filter={filter}
+          onFilterChange={setFilter}
+          assigneeFilter={assigneeFilter}
+          onAssigneeFilterChange={setAssigneeFilter}
+          updatedAgo="דקה"
+        />
 
         <main className="grid">
           {snapshot.offices.map((office, i) => (
@@ -242,6 +250,7 @@ export default function Dashboard({ initial }: DashboardProps) {
               tasksByDept={snapshot.officeTasks[office.id] ?? {}}
               newTaskIds={newTaskIds}
               filter={filter}
+              assigneeFilter={assigneeFilter}
               animationDelayMs={60 * i}
               onQuickAdd={(officeId, dept) => openAdd(officeId, dept)}
               onRemoveTask={handleRemoveTask}
@@ -252,6 +261,7 @@ export default function Dashboard({ initial }: DashboardProps) {
             newTaskIds={newTaskIds}
             newRowId={newRowIdState}
             filter={filter}
+            assigneeFilter={assigneeFilter}
             animationDelayMs={60 * snapshot.offices.length}
             onQuickAdd={(rowName) => openAdd(MGMT_ID, rowName)}
             onAddRow={handleAddRow}

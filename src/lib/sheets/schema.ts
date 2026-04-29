@@ -1,11 +1,11 @@
 /**
  * Sheet schema — single source of truth for tab names + columns.
  *
- *   tasks               id | officeId | dept   | type | text | createdAt
+ *   tasks               id | officeId | dept   | type | assignee | text | createdAt
  *   mgmt_rows           id | name     | sortIndex
- *   mgmt_tasks          id | rowId    | type   | text | createdAt
- *   tasks_archive       id | officeId | dept   | type | text | createdAt  (same as tasks)
- *   mgmt_tasks_archive  id | rowId    | type   | text | createdAt          (same as mgmt_tasks)
+ *   mgmt_tasks          id | rowId    | type   | assignee | text | createdAt
+ *   tasks_archive       id | officeId | dept   | type | assignee | text | createdAt  (same as tasks)
+ *   mgmt_tasks_archive  id | rowId    | type   | assignee | text | createdAt            (same as mgmt_tasks)
  *
  * Office tasks live in `tasks`; management tasks live in `mgmt_tasks`
  * (keyed by rowId, so renaming a row doesn't orphan its tasks).
@@ -26,9 +26,9 @@ export type TabName =
   | typeof TAB_TASKS_ARCHIVE
   | typeof TAB_MGMT_TASKS_ARCHIVE;
 
-export const TASKS_HEADERS = ["id", "officeId", "dept", "type", "text", "createdAt"] as const;
+export const TASKS_HEADERS = ["id", "officeId", "dept", "type", "assignee", "text", "createdAt"] as const;
 export const MGMT_ROWS_HEADERS = ["id", "name", "sortIndex"] as const;
-export const MGMT_TASKS_HEADERS = ["id", "rowId", "type", "text", "createdAt"] as const;
+export const MGMT_TASKS_HEADERS = ["id", "rowId", "type", "assignee", "text", "createdAt"] as const;
 
 export const ALL_TABS = [
   { name: TAB_TASKS, headers: TASKS_HEADERS },
@@ -44,8 +44,9 @@ export const TASK_COL = {
   officeId: 1,
   dept: 2,
   type: 3,
-  text: 4,
-  createdAt: 5,
+  assignee: 4,
+  text: 5,
+  createdAt: 6,
 } as const;
 
 export const MGMT_ROW_COL = {
@@ -58,8 +59,9 @@ export const MGMT_TASK_COL = {
   id: 0,
   rowId: 1,
   type: 2,
-  text: 3,
-  createdAt: 4,
+  assignee: 3,
+  text: 4,
+  createdAt: 5,
 } as const;
 
 /** Convenience for serializing a task to a sheet row in the canonical order. */
@@ -68,6 +70,7 @@ export interface TaskRow {
   officeId: string;
   dept: string;
   type: string;
+  assignee: string;
   text: string;
   createdAt: string;
 }
@@ -82,12 +85,13 @@ export interface MgmtTaskRow {
   id: string;
   rowId: string;
   type: string;
+  assignee: string;
   text: string;
   createdAt: string;
 }
 
 export function taskRowToValues(t: TaskRow): (string | number)[] {
-  return [t.id, t.officeId, t.dept, t.type, t.text, t.createdAt];
+  return [t.id, t.officeId, t.dept, t.type, t.assignee, t.text, t.createdAt];
 }
 
 export function mgmtRowRowToValues(r: MgmtRowRow): (string | number)[] {
@@ -95,5 +99,5 @@ export function mgmtRowRowToValues(r: MgmtRowRow): (string | number)[] {
 }
 
 export function mgmtTaskRowToValues(t: MgmtTaskRow): (string | number)[] {
-  return [t.id, t.rowId, t.type, t.text, t.createdAt];
+  return [t.id, t.rowId, t.type, t.assignee, t.text, t.createdAt];
 }
