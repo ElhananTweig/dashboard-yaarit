@@ -27,22 +27,22 @@ export function getSpreadsheetId(): string {
 }
 
 async function loadCredentials(): Promise<{ client_email: string; private_key: string }> {
-  const keyPath = process.env.GOOGLE_SERVICE_ACCOUNT_PATH;
-  if (!keyPath) throw new Error("GOOGLE_SERVICE_ACCOUNT_PATH is not set in .env.local");
-  const absPath = path.isAbsolute(keyPath) ? keyPath : path.resolve(process.cwd(), keyPath);
-  let raw: string;
+  // קריאת משתנה הסביבה שהגדרת ב-Vercel
+  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+  
+  if (!raw) {
+    throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY is not set in environment variables");
+  }
+
   try {
-    raw = await fs.readFile(absPath, "utf8");
+    const creds = JSON.parse(raw);
+    if (!creds.client_email || !creds.private_key) {
+      throw new Error("Service-account JSON is missing client_email or private_key");
+    }
+    return creds;
   } catch (err) {
-    throw new Error(
-      `Could not read service-account file at ${absPath}: ${(err as Error).message}`,
-    );
+    throw new Error(`Failed to parse GOOGLE_SERVICE_ACCOUNT_KEY: ${(err as Error).message}`);
   }
-  const creds = JSON.parse(raw);
-  if (!creds.client_email || !creds.private_key) {
-    throw new Error(`Service-account JSON at ${absPath} is missing client_email/private_key`);
-  }
-  return creds;
 }
 
 export async function getSheetsClient(): Promise<sheets_v4.Sheets> {
