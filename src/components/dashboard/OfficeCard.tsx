@@ -54,9 +54,11 @@ export default function OfficeCard({
     >
       <header className="card-head">
         <div className="logo-tile" style={{ ["--logo-bg" as string]: office.logoBg } as React.CSSProperties}>
-          {/* Plain <img> keeps logoBg backdrops simple; no Next/Image for these tiny brand marks. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={office.logo} alt={office.name} loading="lazy" />
+          <Link href={`/calendar/${office.id}`} title="יומן חודשי">
+            {/* Plain <img> keeps logoBg backdrops simple; no Next/Image for these tiny brand marks. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={office.logo} alt={office.name} loading="lazy" />
+          </Link>
         </div>
         <div className="office-id">
           <div className="name">

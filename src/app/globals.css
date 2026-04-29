@@ -506,6 +506,9 @@ body::before {
   flex-shrink: 0;
   position: relative;
 }
+.logo-tile a {
+  display: contents;
+}
 .logo-tile img {
   max-width: 78%;
   max-height: 78%;
